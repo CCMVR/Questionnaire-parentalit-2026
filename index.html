@@ -202,13 +202,25 @@
 
                 <!-- Q2 : Quel âge ont les enfants de votre famille ? -->
                 <div class="pt-2 border-t border-slate-100">
-                    <label class="block text-sm font-bold text-slate-800 mb-2">
-                        2. Quel âge ont les enfants de votre famille ? <span class="text-rose-500">*</span>
-                    </label>
-                    <p class="text-xs text-slate-500 mb-3">Plusieurs choix possibles :</p>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <label class="block text-sm font-bold text-slate-800">
+                            2. Quel âge ont les enfants de votre famille ? <span class="text-rose-500">*</span>
+                        </label>
+                        <button type="button" id="btn-clear-ages" onclick="clearAllAges()" class="text-[11px] text-slate-400 hover:text-rose-600 font-semibold underline hidden">
+                            Réinitialiser
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-3">
+                        Touchez une tranche d'âge pour ajouter un enfant (cliquez plusieurs fois si vous en avez plusieurs) :
+                    </p>
                     
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5" id="ages-grid">
-                        <!-- Tranches d'âges -->
+                        <!-- Tranches d'âges avec compteurs -->
+                    </div>
+
+                    <!-- Résumé interactif des enfants saisis -->
+                    <div id="ages-summary" class="mt-2.5 px-3 py-2 rounded-xl bg-sky-50/80 border border-sky-100 text-xs text-sky-900 hidden flex items-center justify-between">
+                        <span id="ages-summary-text" class="font-medium"></span>
                     </div>
 
                     <div class="mt-3">
@@ -727,29 +739,30 @@
         const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         const COMMUNES_CCMVR = [
-            "Monistrol-sur-Loire",
-            "Sainte-Sigolène",
             "Bas-en-Basset",
             "Beauzac",
-            "Saint-Pal-de-Mons",
-            "Les Villettes",
-            "La Séauve-sur-Semène",
-            "Saint-Didier-en-Velay",
-            "Saint-Pal-de-Chalencon",
-            "Tiranges",
             "Boisset",
-            "Valprivas",
+            "La-Chapelle-d’Aurec",
+            "Les Villettes",
+            "Malvalette",
+            "Monistrol-sur-Loire",
+            "Saint-André-de-Chalencon",
+            "Saint-Pal-de-Chalencon",
+            "Saint-Pal-de-Mons",
+            "Sainte-Sigolène",
             "Solignac-sous-Roche",
-            "Saint-André-de-Chalencon"
+            "Tiranges",
+            "Valprivas"
         ];
 
         const TRANCHES_AGES = [
-            { label: "0 - 3 ans", desc: "Petite enfance" },
-            { label: "4 - 6 ans", desc: "Maternelle" },
-            { label: "7 - 11 ans", desc: "Élémentaire" },
-            { label: "12 - 15 ans", desc: "Collège" },
-            { label: "16 - 18 ans", desc: "Lycée" },
-            { label: "+ de 18 ans", desc: "Jeunes adultes" }
+            { id: "0-1", label: "0 - 1 an", desc: "Nourrisson / Bébé" },
+            { id: "1-3", label: "1 - 3 ans", desc: "Petite enfance" },
+            { id: "3-6", label: "3 - 6 ans", desc: "Maternelle" },
+            { id: "6-11", label: "6 - 11 ans", desc: "Élémentaire" },
+            { id: "11-15", label: "11 - 15 ans", desc: "Collège" },
+            { id: "15-18", label: "15 - 18 ans", desc: "Lycée" },
+            { id: "adulte", label: "Enfant adulte", desc: "+ de 18 ans" }
         ];
 
         // ---------------------------------------------------------------------
@@ -759,7 +772,7 @@
         const formData = {
             commune: '',
             commune_autre: '',
-            ages_enfants: [],
+            ages_counts: {}, // Format { "0 - 1 an": 0, "1 - 3 ans": 2, ... }
             ages_details: '',
             note_soiree: null,
             avis_spectacle: '',
@@ -770,6 +783,9 @@
             email: '',
             idee_suggestion: ''
         };
+
+        // Initialisation des compteurs d'âges à 0
+        TRANCHES_AGES.forEach(t => formData.ages_counts[t.label] = 0);
 
         let adminResponsesData = [];
         let chartCommunesInstance = null;
@@ -824,43 +840,141 @@
             document.getElementById('err-q1').classList.add('hidden');
         }
 
-        // 2. Initialisation des tranches d'âge des enfants
+        // 2. Initialisation des tranches d'âge avec compteur tactile (clics multiples)
         function initAgesGrid() {
             const container = document.getElementById('ages-grid');
             if (!container) return;
 
             container.innerHTML = TRANCHES_AGES.map(t => `
-                <button type="button" data-age="${t.label}"
-                        onclick="toggleAgeSelection('${t.label}')"
-                        class="age-btn p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-300 transition-all text-left flex flex-col justify-between">
-                    <span class="text-xs font-bold text-slate-800">${t.label}</span>
-                    <span class="text-[10px] text-slate-400 font-medium">${t.desc}</span>
-                </button>
+                <div data-age="${t.label}"
+                     onclick="incrementAge('${t.label}')"
+                     class="age-card p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-300 transition-all cursor-pointer select-none flex flex-col justify-between">
+                    <div class="flex items-start justify-between gap-1">
+                        <div>
+                            <span class="age-label text-xs font-bold text-slate-800 block">${t.label}</span>
+                            <span class="text-[10px] text-slate-400 font-medium block leading-tight">${t.desc}</span>
+                        </div>
+                        <span class="age-badge hidden min-w-[1.35rem] h-5 px-1 rounded-full bg-primary text-white text-[11px] font-extrabold flex items-center justify-center shadow-xs">
+                            0
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100">
+                        <span class="age-hint text-[10px] text-slate-400 font-medium">Toucher pour +1</span>
+                        <div class="flex items-center gap-1">
+                            <button type="button" title="Retirer un enfant"
+                                    onclick="event.stopPropagation(); decrementAge('${t.label}')"
+                                    class="btn-dec hidden w-6 h-6 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-600 font-bold text-xs items-center justify-center transition-colors">
+                                −
+                            </button>
+                            <button type="button" title="Ajouter un enfant"
+                                    onclick="event.stopPropagation(); incrementAge('${t.label}')"
+                                    class="w-6 h-6 rounded-lg bg-sky-50 hover:bg-sky-200 text-primary font-bold text-xs flex items-center justify-center transition-colors">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `).join('');
+
+            updateAgesDisplay();
         }
 
-        function toggleAgeSelection(label) {
-            const index = formData.ages_enfants.indexOf(label);
-            if (index > -1) {
-                formData.ages_enfants.splice(index, 1);
-            } else {
-                formData.ages_enfants.push(label);
-            }
+        function incrementAge(label) {
+            formData.ages_counts[label] = (formData.ages_counts[label] || 0) + 1;
+            updateAgesDisplay();
+            document.getElementById('err-q2').classList.add('hidden');
+        }
 
-            document.querySelectorAll('.age-btn').forEach(btn => {
-                const ageLabel = btn.getAttribute('data-age');
-                if (formData.ages_enfants.includes(ageLabel)) {
-                    btn.classList.remove('border-slate-200', 'bg-white');
-                    btn.classList.add('border-primary', 'bg-sky-50/70', 'shadow-xs');
-                    btn.querySelector('span:first-child').classList.add('text-primary');
-                } else {
-                    btn.classList.remove('border-primary', 'bg-sky-50/70', 'shadow-xs');
-                    btn.classList.add('border-slate-200', 'bg-white');
-                    btn.querySelector('span:first-child').classList.remove('text-primary');
+        function decrementAge(label) {
+            if ((formData.ages_counts[label] || 0) > 0) {
+                formData.ages_counts[label]--;
+            }
+            updateAgesDisplay();
+        }
+
+        function clearAllAges() {
+            TRANCHES_AGES.forEach(t => formData.ages_counts[t.label] = 0);
+            updateAgesDisplay();
+        }
+
+        function updateAgesDisplay() {
+            let totalChildren = 0;
+            const summaryParts = [];
+
+            TRANCHES_AGES.forEach(t => {
+                const count = formData.ages_counts[t.label] || 0;
+                totalChildren += count;
+
+                const card = document.querySelector(`.age-card[data-age="${t.label}"]`);
+                if (card) {
+                    const badge = card.querySelector('.age-badge');
+                    const btnDec = card.querySelector('.btn-dec');
+                    const hint = card.querySelector('.age-hint');
+                    const labelSpan = card.querySelector('.age-label');
+
+                    if (count > 0) {
+                        card.classList.remove('border-slate-200', 'bg-white');
+                        card.classList.add('border-primary', 'bg-sky-50/70', 'shadow-xs');
+                        labelSpan.classList.add('text-primary');
+
+                        badge.textContent = count;
+                        badge.classList.remove('hidden');
+                        badge.classList.add('flex');
+
+                        btnDec.classList.remove('hidden');
+                        btnDec.classList.add('flex');
+
+                        hint.textContent = count === 1 ? '1 enfant' : `${count} enfants`;
+                        hint.classList.add('text-primary', 'font-bold');
+                    } else {
+                        card.classList.remove('border-primary', 'bg-sky-50/70', 'shadow-xs');
+                        card.classList.add('border-slate-200', 'bg-white');
+                        labelSpan.classList.remove('text-primary');
+
+                        badge.classList.add('hidden');
+                        badge.classList.remove('flex');
+
+                        btnDec.classList.add('hidden');
+                        btnDec.classList.remove('flex');
+
+                        hint.textContent = 'Toucher pour +1';
+                        hint.classList.remove('text-primary', 'font-bold');
+                    }
+                }
+
+                if (count > 0) {
+                    summaryParts.push(`${count}x (${t.label})`);
                 }
             });
 
-            document.getElementById('err-q2').classList.add('hidden');
+            // Affichage du bandeau récapitulatif
+            const summaryEl = document.getElementById('ages-summary');
+            const summaryTextEl = document.getElementById('ages-summary-text');
+            const btnClear = document.getElementById('btn-clear-ages');
+
+            if (totalChildren > 0) {
+                if (summaryEl) summaryEl.classList.remove('hidden');
+                if (btnClear) btnClear.classList.remove('hidden');
+                if (summaryTextEl) {
+                    summaryTextEl.innerHTML = `👶 <strong>Total : ${totalChildren} enfant${totalChildren > 1 ? 's' : ''}</strong> (${summaryParts.join(', ')})`;
+                }
+            } else {
+                if (summaryEl) summaryEl.classList.add('hidden');
+                if (btnClear) btnClear.classList.add('hidden');
+            }
+        }
+
+        // Calcul de la chaîne formatée des âges pour Supabase & export
+        function getFormattedAgesString() {
+            const parts = [];
+            TRANCHES_AGES.forEach(t => {
+                const count = formData.ages_counts[t.label] || 0;
+                if (count > 0) {
+                    parts.push(count === 1 ? `1x (${t.label})` : `${count}x (${t.label})`);
+                }
+            });
+            return parts.join(', ');
         }
 
         // 3. Initialisation du système de notation étoiles (1 à 5)
@@ -1029,7 +1143,9 @@
 
             // Q2 : Enfants
             formData.ages_details = document.getElementById('ages-precisions').value.trim();
-            if (formData.ages_enfants.length === 0) {
+            const totalChildren = Object.values(formData.ages_counts).reduce((a, b) => a + b, 0);
+            if (totalChildren === 0) {
+                document.getElementById('err-q2').textContent = "Veuillez sélectionner au moins un enfant (touchez une tranche d'âge).";
                 document.getElementById('err-q2').classList.remove('hidden');
                 valid = false;
             }
@@ -1109,7 +1225,7 @@
             const payload = {
                 commune: formData.commune,
                 commune_autre: formData.commune_autre || null,
-                ages_enfants: formData.ages_enfants.join(', '),
+                ages_enfants: getFormattedAgesString(),
                 ages_details: formData.ages_details || null,
                 note_soiree: formData.note_soiree,
                 avis_spectacle: formData.avis_spectacle,
@@ -1161,7 +1277,7 @@
         function resetFormForNewParticipant() {
             formData.commune = '';
             formData.commune_autre = '';
-            formData.ages_enfants = [];
+            TRANCHES_AGES.forEach(t => formData.ages_counts[t.label] = 0);
             formData.ages_details = '';
             formData.note_soiree = null;
             formData.avis_spectacle = '';
