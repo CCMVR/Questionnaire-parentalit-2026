@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Questionnaire Soirée Parentalité 2026 - Marches du Velay Rochebaron</title>
+    
+    <!-- Meta SEO & OpenGraph -->
+    <meta name="description" content="Donnez votre avis sur la soirée parentalité de la Communauté de Communes Marches du Velay Rochebaron. Vos retours nous aident à construire les prochaines actions !">
+    <meta property="og:title" content="Questionnaire Soirée Parentalité 2026 - CCMVR">
+    <meta property="og:description" content="Donnez votre avis en quelques minutes. Simple, anonyme et rapide.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./logo-collectivite.png">
+    <meta name="theme-color" content="#0284c7">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js CDN (pour le portail admin) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Canvas Confetti pour l'animation de succès -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0284c7',       // Sky 600
+                        primary_dark: '#0369a1',  // Sky 700
+                        primary_light: '#38bdf8', // Sky 400
+                        primary_subtle: '#e0f2fe',// Sky 100
+                        ccmvr_dark: '#0f172a',    // Slate 900
+                        accent_amber: '#f59e0b',  // Amber 500
+                        accent_teal: '#0d9488'    // Teal 600
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(2, 132, 199, 0.04)',
+                        'card': '0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 10% 10%, #e0f2fe 0%, #f8fafc 45%, #f1f5f9 100%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Transitions fluides des étapes */
+        .step-panel {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .step-panel.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Effet bouton radio tactile */
+        .choice-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .choice-card:active {
+            transform: scale(0.98);
+        }
+
+        /* Étoiles de notation */
+        .star-btn {
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .star-btn:hover, .star-btn:focus-visible {
+            transform: scale(1.2);
+        }
+
+        /* Scrollbar moderne */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 flex flex-col justify-between selection:bg-sky-500 selection:text-white">
+
+    <!-- =====================================================================
+         EN-TÊTE OFFICIEL
+         ===================================================================== -->
+    <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="./logo-collectivite.png" alt="Logo CCMVR" class="h-10 sm:h-12 w-auto object-contain"
+                     onerror="this.src='https://placehold.co/180x60/f8fafc/0284c7?text=CCMVR'">
+                <div class="border-l border-slate-200 pl-3">
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-primary">Marches du Velay Rochebaron</p>
+                    <h1 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">Soirée Parentalité</h1>
+                </div>
+            </div>
+            
+            <!-- Bouton discret admin -->
+            <button onclick="openAdminModal()" title="Espace administration"
+                    class="p-2 text-slate-400 hover:text-primary hover:bg-sky-50 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Barre de progression Stepper (visible en mode participant) -->
+        <div id="stepper-progress-container" class="w-full bg-slate-100 h-1.5">
+            <div id="stepper-bar" class="bg-gradient-to-r from-sky-500 to-primary h-1.5 transition-all duration-300 w-1/4"></div>
+        </div>
+    </header>
+
+    <!-- =====================================================================
+         CORPS PRINCIPAL DU QUESTIONNAIRE (MODE PARTICIPANT)
+         ===================================================================== -->
+    <main id="participant-container" class="flex-grow max-w-2xl w-full mx-auto px-4 py-6 sm:py-8">
+        
+        <!-- EN-TÊTE D'ACCUEIL AVEC BADGE -->
+        <div class="mb-6 text-center">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200 mb-3">
+                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Votre avis nous intéresse !
+            </span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Questionnaire Soirée Parentalité</h2>
+            <p class="text-sm text-slate-600 mt-2 max-w-lg mx-auto">
+                Merci d’avoir participé à cette soirée. Vos retours nous aideront à imaginer les prochaines actions autour de la parentalité.
+            </p>
+            
+            <!-- Indicateur des étapes -->
+            <div class="flex items-center justify-center gap-2 mt-4 text-xs font-semibold text-slate-500" id="step-indicator-text">
+                Étape <span id="current-step-num" class="text-primary font-bold">1</span> sur 4
+            </div>
+        </div>
+
+        <form id="questionnaire-form" onsubmit="event.preventDefault();" class="space-y-6">
+            
+            <!-- =============================================================
+                 ÉTAPE 1 : VOUS & VOTRE FAMILLE
+                 ============================================================= -->
+            <div id="step-1" class="step-panel active bg-white rounded-3xl p-5 sm:p-7 shadow-card border border-slate-100 space-y-6">
+                <div class="border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-primary font-extrabold text-sm">1</span>
+                        <h3 class="text-lg font-bold text-slate-900">Vous & votre famille</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 ml-9">Mieux comprendre les familles du territoire présentes ce soir.</p>
+                </div>
+
+                <!-- Q1 : Dans quelle commune habitez-vous ? -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        1. Dans quelle commune habitez-vous ? <span class="text-rose-500">*</span>
+                    </label>
+                    <p class="text-xs text-slate-500 mb-3">Sélectionnez votre commune parmi les 14 communes de la CCMVR :</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="communes-grid">
+                        <!-- Généré dynamiquement en JS pour les 14 communes + Autre -->
+                    </div>
+
+                    <!-- Champ conditionnel si 'Autre' est coché -->
+                    <div id="commune-autre-container" class="mt-3 hidden">
+                        <label for="commune-autre-input" class="block text-xs font-semibold text-slate-700 mb-1">Précisez votre commune :</label>
+                        <input type="text" id="commune-autre-input" placeholder="Ex: Yssingeaux, Firminy..."
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                    </div>
+                    <p id="err-q1" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Veuillez sélectionner votre commune pour continuer.</p>
+                </div>
+
+                <!-- Q2 : Quel âge ont les enfants de votre famille ? -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        2. Quel âge ont les enfants de votre famille ? <span class="text-rose-500">*</span>
+                    </label>
+                    <p class="text-xs text-slate-500 mb-3">Plusieurs choix possibles :</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5" id="ages-grid">
+                        <!-- Tranches d'âges -->
+                    </div>
+
+                    <div class="mt-3">
+                        <label for="ages-precisions" class="block text-xs font-medium text-slate-600 mb-1">Précisions (âges exacts, nombre d'enfants...) - optionnel :</label>
+                        <input type="text" id="ages-precisions" placeholder="Ex: 2 ans et 5 ans"
+                               class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm text-slate-700">
+                    </div>
+                    <p id="err-q2" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Veuillez cocher au moins une tranche d'âge.</p>
+                </div>
+
+                <!-- Boutons de navigation -->
+                <div class="pt-4 flex justify-end">
+                    <button type="button" onclick="goToStep(2)"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary_dark text-white font-bold text-sm shadow-md transition-all active:scale-95">
+                        <span>Suivant</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =============================================================
+                 ÉTAPE 2 : VOTRE AVIS SUR LA SOIRÉE
+                 ============================================================= -->
+            <div id="step-2" class="step-panel bg-white rounded-3xl p-5 sm:p-7 shadow-card border border-slate-100 space-y-6">
+                <div class="border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-primary font-extrabold text-sm">2</span>
+                        <h3 class="text-lg font-bold text-slate-900">Votre avis sur la soirée</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 ml-9">Partagez votre ressenti sur cette rencontre et le spectacle.</p>
+                </div>
+
+                <!-- Q3 : Comment avez-vous apprécié cette soirée ? -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        3. Comment avez-vous apprécié cette soirée ? <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                        <div class="flex justify-center items-center gap-2 sm:gap-3 py-2" id="star-rating-container">
+                            <button type="button" class="star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none" data-value="1">
+                                <svg class="w-9 h-9 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none" data-value="2">
+                                <svg class="w-9 h-9 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none" data-value="3">
+                                <svg class="w-9 h-9 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none" data-value="4">
+                                <svg class="w-9 h-9 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none" data-value="5">
+                                <svg class="w-9 h-9 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </button>
+                        </div>
+                        <input type="hidden" id="note-soiree-input" value="">
+                        <div id="star-rating-label" class="text-xs font-semibold text-slate-500 mt-1 min-h-[1.2rem]">
+                            Cliquez sur une étoile pour noter
+                        </div>
+                    </div>
+                    <p id="err-q3" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Merci d'attribuer une note pour continuer.</p>
+                </div>
+
+                <!-- Q4 : Qu’avez-vous pensé du spectacle « Ma(non) Violence ordinaire » ? -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        4. Qu’avez-vous pensé du spectacle « Ma(non) Violence ordinaire » ? <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2.5" id="spectacle-grid">
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="avis_spectacle" value="Très apprécié" class="sr-only">
+                            <span class="text-xl mr-2.5">🤩</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Très apprécié</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="avis_spectacle" value="Apprécié" class="sr-only">
+                            <span class="text-xl mr-2.5">😊</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Apprécié</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="avis_spectacle" value="Peu apprécié" class="sr-only">
+                            <span class="text-xl mr-2.5">😐</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Peu apprécié</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="avis_spectacle" value="Pas apprécié" class="sr-only">
+                            <span class="text-xl mr-2.5">🙁</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Pas apprécié</span>
+                        </label>
+                    </div>
+                    <p id="err-q4" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Veuillez sélectionner une réponse pour le spectacle.</p>
+                </div>
+
+                <!-- Q5 : Cette soirée vous a-t-elle permis de réfléchir ou d’échanger autour de la parentalité ? -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        5. Cette soirée vous a-t-elle permis de réfléchir ou d’échanger autour de la parentalité ? <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2.5" id="echange-grid">
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="echange_parentalite" value="Oui, beaucoup" class="sr-only">
+                            <span class="text-xl mr-2.5">💡</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Oui, beaucoup</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="echange_parentalite" value="Un peu" class="sr-only">
+                            <span class="text-xl mr-2.5">🌱</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Un peu</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="echange_parentalite" value="Pas vraiment" class="sr-only">
+                            <span class="text-xl mr-2.5">💭</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Pas vraiment</span>
+                        </label>
+                        <label class="choice-card flex items-center p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="echange_parentalite" value="Pas du tout" class="sr-only">
+                            <span class="text-xl mr-2.5">❌</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-800">Pas du tout</span>
+                        </label>
+                    </div>
+                    <p id="err-q5" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Veuillez sélectionner une réponse pour continuer.</p>
+                </div>
+
+                <!-- Boutons de navigation -->
+                <div class="pt-4 flex items-center justify-between gap-3">
+                    <button type="button" onclick="goToStep(1)"
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Retour</span>
+                    </button>
+                    <button type="button" onclick="goToStep(3)"
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary_dark text-white font-bold text-sm shadow-md transition-all active:scale-95">
+                        <span>Suivant</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =============================================================
+                 ÉTAPE 3 : VOS IMPRESSIONS & IDÉES
+                 ============================================================= -->
+            <div id="step-3" class="step-panel bg-white rounded-3xl p-5 sm:p-7 shadow-card border border-slate-100 space-y-6">
+                <div class="border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-primary font-extrabold text-sm">3</span>
+                        <h3 class="text-lg font-bold text-slate-900">Vos retours & suggestions</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 ml-9">Vos mots libres pour nous faire progresser.</p>
+                </div>
+
+                <!-- Q6 : Qu’avez-vous particulièrement apprécié ? -->
+                <div>
+                    <label for="q6-input" class="block text-sm font-bold text-slate-800 mb-1.5">
+                        6. Qu’avez-vous particulièrement apprécié ?
+                    </label>
+                    <p class="text-xs text-slate-500 mb-2">Un moment marquant, l'ambiance, les échanges, le format...</p>
+                    <textarea id="q6-input" rows="3" placeholder="Ce qui m'a plu..."
+                              class="w-full p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm text-slate-800 placeholder-slate-400"></textarea>
+                </div>
+
+                <!-- Q7 : Quels thèmes ou actions aimeriez-vous retrouver lors de prochaines rencontres ? -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label for="q7-input" class="block text-sm font-bold text-slate-800 mb-1.5">
+                        7. Quels thèmes ou actions aimeriez-vous retrouver lors de prochaines rencontres autour de la parentalité ?
+                    </label>
+                    <p class="text-xs text-slate-500 mb-2">Ex : écrans, adolescence, gestion des émotions, sommeil, ateliers parents-enfants...</p>
+                    <textarea id="q7-input" rows="3" placeholder="Idées de thèmes, formats d'ateliers, intervenants..."
+                              class="w-full p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm text-slate-800 placeholder-slate-400"></textarea>
+                </div>
+
+                <!-- Suggestion finale : Une dernière idée ou suggestion ? -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label for="suggestion-input" class="block text-sm font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                        <span>💡</span>
+                        <span>Une dernière idée ou suggestion ?</span>
+                    </label>
+                    <textarea id="suggestion-input" rows="2" placeholder="Une remarque complémentaire, un message pour l'équipe..."
+                              class="w-full p-3.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm text-slate-800 placeholder-slate-400"></textarea>
+                </div>
+
+                <!-- Boutons de navigation -->
+                <div class="pt-4 flex items-center justify-between gap-3">
+                    <button type="button" onclick="goToStep(2)"
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Retour</span>
+                    </button>
+                    <button type="button" onclick="goToStep(4)"
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary_dark text-white font-bold text-sm shadow-md transition-all active:scale-95">
+                        <span>Suivant</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =============================================================
+                 ÉTAPE 4 : RESTONS EN CONTACT & VALIDATION FINALE
+                 ============================================================= -->
+            <div id="step-4" class="step-panel bg-white rounded-3xl p-5 sm:p-7 shadow-card border border-slate-100 space-y-6">
+                <div class="border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-primary font-extrabold text-sm">4</span>
+                        <h3 class="text-lg font-bold text-slate-900">Restons connectés</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 ml-9">Dernière étape avant la validation de votre retour.</p>
+                </div>
+
+                <!-- Q8 : Souhaitez-vous être informé(e) des prochaines actions ? -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-2">
+                        8. Souhaitez-vous être informé(e) des prochaines actions ? <span class="text-rose-500">*</span>
+                    </label>
+                    <p class="text-xs text-slate-500 mb-3">Recevez le calendrier des futurs événements, conférences et ateliers :</p>
+                    
+                    <div class="grid grid-cols-2 gap-3" id="contact-toggle-grid">
+                        <label class="choice-card flex items-center justify-center p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="souhaite_etre_informe" value="true" class="sr-only">
+                            <span class="text-lg mr-2">📬</span>
+                            <span class="text-sm font-bold text-slate-800">Oui</span>
+                        </label>
+                        <label class="choice-card flex items-center justify-center p-3.5 rounded-2xl border-2 border-slate-200 cursor-pointer hover:border-sky-300">
+                            <input type="radio" name="souhaite_etre_informe" value="false" class="sr-only">
+                            <span class="text-lg mr-2">✋</span>
+                            <span class="text-sm font-bold text-slate-800">Non</span>
+                        </label>
+                    </div>
+
+                    <!-- Champ email conditionnel si Oui -->
+                    <div id="email-field-container" class="mt-4 p-4 rounded-2xl bg-sky-50/70 border border-sky-100 hidden">
+                        <label for="contact-email" class="block text-xs font-bold text-slate-800 mb-1">
+                            Votre adresse email <span class="text-rose-500">*</span> :
+                        </label>
+                        <input type="email" id="contact-email" placeholder="votre.email@exemple.fr"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm bg-white">
+                        <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Votre email sera uniquement utilisé pour vous envoyer les actualités parentalité CCMVR.
+                        </p>
+                        <p id="err-email" class="text-xs font-semibold text-rose-500 mt-1 hidden">Veuillez renseigner une adresse email valide.</p>
+                    </div>
+
+                    <p id="err-q8" class="text-xs font-semibold text-rose-500 mt-1.5 hidden">Veuillez indiquer si vous souhaitez être informé(e).</p>
+                </div>
+
+                <!-- Récapitulatif bienveillant -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
+                    <span class="text-2xl">🤝</span>
+                    <div class="text-xs text-slate-600 leading-relaxed">
+                        <strong class="text-slate-800 font-bold block mb-0.5">Merci pour votre confiance !</strong>
+                        Vos réponses sont précieuses pour les élus et l'équipe jeunesse-parentalité de la CCMVR.
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="pt-4 flex items-center justify-between gap-3">
+                    <button type="button" onclick="goToStep(3)"
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Retour</span>
+                    </button>
+                    <button type="button" id="btn-submit" onclick="submitQuestionnaire()"
+                            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-sky-600 to-primary hover:from-sky-700 hover:to-primary_dark text-white font-extrabold text-sm shadow-lg shadow-sky-500/25 transition-all active:scale-95">
+                        <span id="btn-submit-text">Envoyer mes réponses</span>
+                        <svg id="btn-submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- =============================================================
+                 ÉTAPE 5 : CONFIRMATION & REMERCIEMENTS
+                 ============================================================= -->
+            <div id="step-success" class="step-panel bg-white rounded-3xl p-6 sm:p-10 shadow-card border border-slate-100 text-center space-y-5">
+                <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner animate-bounce">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Merci beaucoup !</h3>
+                    <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                        Vos réponses ont bien été enregistrées. Grâce à vous, nous pourrons proposer des actions au plus près des besoins des familles de nos communes.
+                    </p>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row justify-center gap-3">
+                    <button type="button" onclick="resetFormForNewParticipant()"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Remplir un autre questionnaire
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <!-- =====================================================================
+         TABLEAU DE BORD ADMINISTRATEUR (MASQUÉ PAR DÉFAUT)
+         ===================================================================== -->
+    <div id="admin-view" class="hidden flex-grow max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+        
+        <!-- En-tête Admin -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-100 text-primary flex items-center justify-center font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">Portail Administrateur</h2>
+                    <p class="text-xs text-slate-500">
+                        Connecté : <span id="admin-current-user" class="font-semibold text-slate-700">admin2@ccmvr.fr</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions admin -->
+            <div class="flex items-center flex-wrap gap-2">
+                <button onclick="loadAdminData()"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    <span>Actualiser</span>
+                </button>
+                <button onclick="exportToCSV()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    <span>Exporter Excel (.csv)</span>
+                </button>
+                <button onclick="logoutAdmin()"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    <span>Déconnexion</span>
+                </button>
+                <button onclick="switchView('participant')"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-colors">
+                    <span>Retour au questionnaire</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 Cartes KPIs -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-2xl shadow-card border border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Réponses totales</span>
+                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1" id="kpi-total">0</div>
+                <span class="text-[11px] text-slate-400">Soumissions enregistrées</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-card border border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Note soirée</span>
+                <div class="text-2xl sm:text-3xl font-extrabold text-amber-500 mt-1" id="kpi-note-moyenne">- / 5</div>
+                <span class="text-[11px] text-slate-400">Moyenne globale des étoiles</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-card border border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Avis Spectacle</span>
+                <div class="text-2xl sm:text-3xl font-extrabold text-sky-600 mt-1" id="kpi-satisfaction-spectacle">-%</div>
+                <span class="text-[11px] text-slate-400">Très apprécié + Apprécié</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-card border border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Emails collectés</span>
+                <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1" id="kpi-emails-count">0</div>
+                <span class="text-[11px] text-slate-400">Pour les prochaines actions</span>
+            </div>
+        </div>
+
+        <!-- Graphiques de synthèse -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Chart Communes -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-card border border-slate-100">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Répartition par commune</h4>
+                <div class="h-64">
+                    <canvas id="chart-communes"></canvas>
+                </div>
+            </div>
+            <!-- Chart Notes Soirée -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-card border border-slate-100">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Notes de la soirée (Étoiles)</h4>
+                <div class="h-64">
+                    <canvas id="chart-notes"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau des réponses -->
+        <div class="bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden">
+            <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900">Détail des réponses reçues</h3>
+                    <p class="text-xs text-slate-500">Toutes les soumissions classées par ordre antéchronologique</p>
+                </div>
+                <div class="w-full sm:w-64">
+                    <input type="text" id="admin-search" placeholder="Rechercher (commune, email...)" oninput="filterAdminTable()"
+                           class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200/80">
+                            <th class="p-3">Date</th>
+                            <th class="p-3">Commune</th>
+                            <th class="p-3">Enfants</th>
+                            <th class="p-3 text-center">Soirée</th>
+                            <th class="p-3">Spectacle</th>
+                            <th class="p-3">Échange</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
+                        <tr>
+                            <td colspan="8" class="p-8 text-center text-slate-400">Chargement des réponses...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL : CONNEXION ADMINISTRATEUR
+         ===================================================================== -->
+    <div id="modal-admin-login" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-2xl bg-sky-100 text-primary flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-900">Accès Administrateur</h3>
+                <p class="text-xs text-slate-500">Connexion sécurisée via Supabase</p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); submitAdminLogin();" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Email :</label>
+                    <input type="email" id="login-email" value="admin2@ccmvr.fr" required
+                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mot de passe :</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required
+                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary text-xs">
+                </div>
+                <p id="login-error-msg" class="text-xs font-semibold text-rose-500 hidden"></p>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeAdminModal()"
+                            class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit" id="btn-login-submit"
+                            class="w-1/2 py-2.5 rounded-xl bg-primary hover:bg-primary_dark text-white font-bold text-xs shadow-md transition-all active:scale-95">
+                        Connexion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL : DÉTAIL D'UNE RÉPONSE (ADMIN)
+         ===================================================================== -->
+    <div id="modal-detail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900" id="detail-title">Réponse du participant</h3>
+                    <p class="text-xs text-slate-500" id="detail-date"></p>
+                </div>
+                <button onclick="closeDetailModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div id="detail-content" class="space-y-3.5 text-xs">
+                <!-- Rempli dynamiquement en JS -->
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button onclick="closeDetailModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         PIED DE PAGE
+         ===================================================================== -->
+    <footer class="w-full bg-white/70 border-t border-slate-200/60 py-4 px-4 text-center text-xs text-slate-500">
+        <div class="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>Communauté de Communes Marches du Velay Rochebaron • 2026</span>
+            <div class="flex items-center gap-3">
+                <button onclick="openAdminModal()" class="text-slate-400 hover:text-primary transition-colors">
+                    Portail Admin
+                </button>
+                <span>•</span>
+                <span class="text-slate-400">Soirée Parentalité</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- =====================================================================
+         SCRIPT LOGIQUE JAVASCRIPT
+         ===================================================================== -->
+    <script>
+        // ---------------------------------------------------------------------
+        // CONFIGURATION SUPABASE & CONSTANTES
+        // ---------------------------------------------------------------------
+        const SUPABASE_URL = "https://bnloivgpihtsxydjkgyc.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubG9pdmdwaWh0c3h5ZGprZ3ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MDY4MjIsImV4cCI6MjA4Njk4MjgyMn0.U1p2xnYLprSO8-w-6mlG9BMO4_-A916XGmsKQ5WkdEg";
+        const TABLE_NAME = "q_parentalite_reponses";
+
+        const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        const COMMUNES_CCMVR = [
+            "Monistrol-sur-Loire",
+            "Sainte-Sigolène",
+            "Bas-en-Basset",
+            "Beauzac",
+            "Saint-Pal-de-Mons",
+            "Les Villettes",
+            "La Séauve-sur-Semène",
+            "Saint-Didier-en-Velay",
+            "Saint-Pal-de-Chalencon",
+            "Tiranges",
+            "Boisset",
+            "Valprivas",
+            "Solignac-sous-Roche",
+            "Saint-André-de-Chalencon"
+        ];
+
+        const TRANCHES_AGES = [
+            { label: "0 - 3 ans", desc: "Petite enfance" },
+            { label: "4 - 6 ans", desc: "Maternelle" },
+            { label: "7 - 11 ans", desc: "Élémentaire" },
+            { label: "12 - 15 ans", desc: "Collège" },
+            { label: "16 - 18 ans", desc: "Lycée" },
+            { label: "+ de 18 ans", desc: "Jeunes adultes" }
+        ];
+
+        // ---------------------------------------------------------------------
+        // ÉTAT DU FORMULAIRE
+        // ---------------------------------------------------------------------
+        let currentStep = 1;
+        const formData = {
+            commune: '',
+            commune_autre: '',
+            ages_enfants: [],
+            ages_details: '',
+            note_soiree: null,
+            avis_spectacle: '',
+            echange_parentalite: '',
+            apprecie_particulierement: '',
+            themes_actions_futures: '',
+            souhaite_etre_informe: null,
+            email: '',
+            idee_suggestion: ''
+        };
+
+        let adminResponsesData = [];
+        let chartCommunesInstance = null;
+        let chartNotesInstance = null;
+
+        // ---------------------------------------------------------------------
+        // INITIALISATION AU CHARGEMENT DE LA PAGE
+        // ---------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            initCommunesGrid();
+            initAgesGrid();
+            initStarRating();
+            initRadioCards();
+            initContactToggle();
+            checkExistingAdminSession();
+        });
+
+        // 1. Initialisation de la grille des 14 communes + Autre
+        function initCommunesGrid() {
+            const container = document.getElementById('communes-grid');
+            if (!container) return;
+
+            const allCommunes = [...COMMUNES_CCMVR, "Autre / Hors territoire"];
+            container.innerHTML = allCommunes.map(commune => `
+                <button type="button" data-commune="${commune}"
+                        onclick="selectCommune('${commune}')"
+                        class="commune-btn px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition-all text-center leading-snug flex items-center justify-center">
+                    ${commune}
+                </button>
+            `).join('');
+        }
+
+        function selectCommune(commune) {
+            formData.commune = commune;
+            document.querySelectorAll('.commune-btn').forEach(btn => {
+                if (btn.getAttribute('data-commune') === commune) {
+                    btn.className = "commune-btn px-2.5 py-2 rounded-xl border-2 border-primary bg-sky-50 text-xs font-bold text-primary shadow-xs transition-all text-center leading-snug flex items-center justify-center";
+                } else {
+                    btn.className = "commune-btn px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition-all text-center leading-snug flex items-center justify-center";
+                }
+            });
+
+            const autreContainer = document.getElementById('commune-autre-container');
+            if (commune === "Autre / Hors territoire") {
+                autreContainer.classList.remove('hidden');
+                document.getElementById('commune-autre-input').focus();
+            } else {
+                autreContainer.classList.add('hidden');
+                formData.commune_autre = '';
+            }
+
+            document.getElementById('err-q1').classList.add('hidden');
+        }
+
+        // 2. Initialisation des tranches d'âge des enfants
+        function initAgesGrid() {
+            const container = document.getElementById('ages-grid');
+            if (!container) return;
+
+            container.innerHTML = TRANCHES_AGES.map(t => `
+                <button type="button" data-age="${t.label}"
+                        onclick="toggleAgeSelection('${t.label}')"
+                        class="age-btn p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-300 transition-all text-left flex flex-col justify-between">
+                    <span class="text-xs font-bold text-slate-800">${t.label}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">${t.desc}</span>
+                </button>
+            `).join('');
+        }
+
+        function toggleAgeSelection(label) {
+            const index = formData.ages_enfants.indexOf(label);
+            if (index > -1) {
+                formData.ages_enfants.splice(index, 1);
+            } else {
+                formData.ages_enfants.push(label);
+            }
+
+            document.querySelectorAll('.age-btn').forEach(btn => {
+                const ageLabel = btn.getAttribute('data-age');
+                if (formData.ages_enfants.includes(ageLabel)) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-primary', 'bg-sky-50/70', 'shadow-xs');
+                    btn.querySelector('span:first-child').classList.add('text-primary');
+                } else {
+                    btn.classList.remove('border-primary', 'bg-sky-50/70', 'shadow-xs');
+                    btn.classList.add('border-slate-200', 'bg-white');
+                    btn.querySelector('span:first-child').classList.remove('text-primary');
+                }
+            });
+
+            document.getElementById('err-q2').classList.add('hidden');
+        }
+
+        // 3. Initialisation du système de notation étoiles (1 à 5)
+        const STAR_LABELS = {
+            1: "⭐ Pas du tout",
+            2: "⭐⭐ Peu",
+            3: "⭐⭐⭐ Moyen",
+            4: "⭐⭐⭐⭐ Bien",
+            5: "⭐⭐⭐⭐⭐ Très bien"
+        };
+
+        function initStarRating() {
+            const buttons = document.querySelectorAll('.star-btn');
+            const labelEl = document.getElementById('star-rating-label');
+
+            buttons.forEach(btn => {
+                const val = parseInt(btn.getAttribute('data-value'));
+
+                btn.addEventListener('mouseenter', () => {
+                    highlightStars(val);
+                    labelEl.textContent = STAR_LABELS[val];
+                    labelEl.classList.add('text-amber-600', 'font-bold');
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    highlightStars(formData.note_soiree || 0);
+                    if (formData.note_soiree) {
+                        labelEl.textContent = STAR_LABELS[formData.note_soiree];
+                    } else {
+                        labelEl.textContent = "Cliquez sur une étoile pour noter";
+                        labelEl.classList.remove('text-amber-600', 'font-bold');
+                    }
+                });
+
+                btn.addEventListener('click', () => {
+                    formData.note_soiree = val;
+                    document.getElementById('note-soiree-input').value = val;
+                    highlightStars(val);
+                    labelEl.textContent = STAR_LABELS[val];
+                    labelEl.classList.add('text-amber-600', 'font-bold');
+                    document.getElementById('err-q3').classList.add('hidden');
+                });
+            });
+        }
+
+        function highlightStars(count) {
+            const buttons = document.querySelectorAll('.star-btn');
+            buttons.forEach(btn => {
+                const val = parseInt(btn.getAttribute('data-value'));
+                if (val <= count) {
+                    btn.classList.remove('text-slate-300');
+                    btn.classList.add('text-amber-400');
+                } else {
+                    btn.classList.remove('text-amber-400');
+                    btn.classList.add('text-slate-300');
+                }
+            });
+        }
+
+        // 4. Cartes de choix Q4 (spectacle) & Q5 (échange)
+        function initRadioCards() {
+            ['avis_spectacle', 'echange_parentalite'].forEach(name => {
+                const inputs = document.querySelectorAll(`input[name="${name}"]`);
+                inputs.forEach(input => {
+                    input.addEventListener('change', () => {
+                        formData[name] = input.value;
+                        const parentCard = input.closest('label');
+                        const siblings = parentCard.parentElement.querySelectorAll('.choice-card');
+                        siblings.forEach(c => {
+                            c.classList.remove('border-primary', 'bg-sky-50', 'shadow-xs');
+                            c.classList.add('border-slate-200');
+                        });
+                        parentCard.classList.remove('border-slate-200');
+                        parentCard.classList.add('border-primary', 'bg-sky-50', 'shadow-xs');
+
+                        if (name === 'avis_spectacle') document.getElementById('err-q4').classList.add('hidden');
+                        if (name === 'echange_parentalite') document.getElementById('err-q5').classList.add('hidden');
+                    });
+                });
+            });
+        }
+
+        // 5. Toggle Q8 (information & email)
+        function initContactToggle() {
+            const inputs = document.querySelectorAll('input[name="souhaite_etre_informe"]');
+            const emailContainer = document.getElementById('email-field-container');
+
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    const isOui = input.value === 'true';
+                    formData.souhaite_etre_informe = isOui;
+
+                    const parentCard = input.closest('label');
+                    const siblings = parentCard.parentElement.querySelectorAll('.choice-card');
+                    siblings.forEach(c => {
+                        c.classList.remove('border-primary', 'bg-sky-50', 'shadow-xs');
+                        c.classList.add('border-slate-200');
+                    });
+                    parentCard.classList.remove('border-slate-200');
+                    parentCard.classList.add('border-primary', 'bg-sky-50', 'shadow-xs');
+
+                    if (isOui) {
+                        emailContainer.classList.remove('hidden');
+                        document.getElementById('contact-email').focus();
+                    } else {
+                        emailContainer.classList.add('hidden');
+                        formData.email = '';
+                    }
+
+                    document.getElementById('err-q8').classList.add('hidden');
+                });
+            });
+        }
+
+        // ---------------------------------------------------------------------
+        // NAVIGATION STEPPER & VALIDATION DES ÉTAPES
+        // ---------------------------------------------------------------------
+        function goToStep(stepNum) {
+            // Validation de l'étape courante avant d'avancer
+            if (stepNum > currentStep) {
+                if (currentStep === 1 && !validateStep1()) return;
+                if (currentStep === 2 && !validateStep2()) return;
+                if (currentStep === 3 && !validateStep3()) return;
+            }
+
+            currentStep = stepNum;
+
+            // Masquer tous les panneaux
+            document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+
+            // Afficher le panneau demandé
+            const targetPanel = document.getElementById(`step-${stepNum}`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            // Mettre à jour la barre de progression
+            const progressPercent = (stepNum / 4) * 100;
+            const bar = document.getElementById('stepper-bar');
+            if (bar) bar.style.width = `${progressPercent}%`;
+
+            // Mettre à jour le texte d'indicateur
+            const stepNumEl = document.getElementById('current-step-num');
+            if (stepNumEl) stepNumEl.textContent = stepNum;
+
+            // Remonter en douceur en haut du formulaire
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        function validateStep1() {
+            let valid = true;
+
+            // Q1 : Commune
+            if (!formData.commune) {
+                document.getElementById('err-q1').classList.remove('hidden');
+                valid = false;
+            } else if (formData.commune === "Autre / Hors territoire") {
+                const autreVal = document.getElementById('commune-autre-input').value.trim();
+                formData.commune_autre = autreVal;
+                if (!autreVal) {
+                    document.getElementById('err-q1').textContent = "Merci de préciser le nom de votre commune.";
+                    document.getElementById('err-q1').classList.remove('hidden');
+                    valid = false;
+                }
+            }
+
+            // Q2 : Enfants
+            formData.ages_details = document.getElementById('ages-precisions').value.trim();
+            if (formData.ages_enfants.length === 0) {
+                document.getElementById('err-q2').classList.remove('hidden');
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        function validateStep2() {
+            let valid = true;
+
+            // Q3 : Note soirée
+            if (!formData.note_soiree) {
+                document.getElementById('err-q3').classList.remove('hidden');
+                valid = false;
+            }
+
+            // Q4 : Spectacle
+            if (!formData.avis_spectacle) {
+                document.getElementById('err-q4').classList.remove('hidden');
+                valid = false;
+            }
+
+            // Q5 : Échange parentalité
+            if (!formData.echange_parentalite) {
+                document.getElementById('err-q5').classList.remove('hidden');
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        function validateStep3() {
+            // Étape 3 composée de champs texte optionnels mais valorisants
+            formData.apprecie_particulierement = document.getElementById('q6-input').value.trim();
+            formData.themes_actions_futures = document.getElementById('q7-input').value.trim();
+            formData.idee_suggestion = document.getElementById('suggestion-input').value.trim();
+            return true;
+        }
+
+        function validateStep4() {
+            let valid = true;
+
+            if (formData.souhaite_etre_informe === null) {
+                document.getElementById('err-q8').classList.remove('hidden');
+                valid = false;
+            }
+
+            if (formData.souhaite_etre_informe === true) {
+                const emailInput = document.getElementById('contact-email');
+                const emailVal = emailInput.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailVal || !emailRegex.test(emailVal)) {
+                    document.getElementById('err-email').classList.remove('hidden');
+                    valid = false;
+                } else {
+                    document.getElementById('err-email').classList.add('hidden');
+                    formData.email = emailVal;
+                }
+            }
+
+            return valid;
+        }
+
+        // ---------------------------------------------------------------------
+        // SOUMISSION DU FORMULAIRE VERS SUPABASE
+        // ---------------------------------------------------------------------
+        async function submitQuestionnaire() {
+            if (!validateStep4()) return;
+
+            const btnSubmit = document.getElementById('btn-submit');
+            const btnText = document.getElementById('btn-submit-text');
+            btnSubmit.disabled = true;
+            btnText.textContent = "Envoi en cours...";
+
+            // Données prêtes pour l'insertion
+            const payload = {
+                commune: formData.commune,
+                commune_autre: formData.commune_autre || null,
+                ages_enfants: formData.ages_enfants.join(', '),
+                ages_details: formData.ages_details || null,
+                note_soiree: formData.note_soiree,
+                avis_spectacle: formData.avis_spectacle,
+                echange_parentalite: formData.echange_parentalite,
+                apprecie_particulierement: formData.apprecie_particulierement || null,
+                themes_actions_futures: formData.themes_actions_futures || null,
+                souhaite_etre_informe: formData.souhaite_etre_informe,
+                email: formData.email || null,
+                idee_suggestion: formData.idee_suggestion || null,
+                user_agent: navigator.userAgent || null
+            };
+
+            try {
+                if (!supabaseClient) {
+                    throw new Error("Client Supabase non initialisé.");
+                }
+
+                const { data, error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .insert([payload]);
+
+                if (error) throw error;
+
+                // Célébration visuelle avec confetti
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 80,
+                        spread: 60,
+                        origin: { y: 0.6 }
+                    });
+                }
+
+                // Afficher l'écran de confirmation
+                document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById('step-success').classList.add('active');
+                document.getElementById('stepper-progress-container').classList.add('hidden');
+                document.getElementById('step-indicator-text').classList.add('hidden');
+
+            } catch (err) {
+                console.error("Erreur d'envoi:", err);
+                alert("Une erreur est survenue lors de l'enregistrement de vos réponses : " + (err.message || err) + "\n\nVos réponses ont été conservées à l'écran, vous pouvez retenter l'envoi.");
+            } finally {
+                btnSubmit.disabled = false;
+                btnText.textContent = "Envoyer mes réponses";
+            }
+        }
+
+        // Remise à zéro pour un autre participant
+        function resetFormForNewParticipant() {
+            formData.commune = '';
+            formData.commune_autre = '';
+            formData.ages_enfants = [];
+            formData.ages_details = '';
+            formData.note_soiree = null;
+            formData.avis_spectacle = '';
+            formData.echange_parentalite = '';
+            formData.apprecie_particulierement = '';
+            formData.themes_actions_futures = '';
+            formData.souhaite_etre_informe = null;
+            formData.email = '';
+            formData.idee_suggestion = '';
+
+            document.getElementById('questionnaire-form').reset();
+            initCommunesGrid();
+            initAgesGrid();
+            highlightStars(0);
+            document.querySelectorAll('.choice-card').forEach(c => {
+                c.classList.remove('border-primary', 'bg-sky-50', 'shadow-xs');
+                c.classList.add('border-slate-200');
+            });
+
+            document.getElementById('stepper-progress-container').classList.remove('hidden');
+            document.getElementById('step-indicator-text').classList.remove('hidden');
+            goToStep(1);
+        }
+
+        // ---------------------------------------------------------------------
+        // PORTAIL ADMINISTRATEUR (SUPABASE AUTH & DASHBOARD)
+        // ---------------------------------------------------------------------
+        function openAdminModal() {
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+            document.getElementById('login-password').focus();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('modal-admin-login').classList.add('hidden');
+            document.getElementById('login-error-msg').classList.add('hidden');
+        }
+
+        async function submitAdminLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-login-submit');
+            const errEl = document.getElementById('login-error-msg');
+
+            btn.disabled = true;
+            btn.textContent = "Vérification...";
+            errEl.classList.add('hidden');
+
+            try {
+                if (!supabaseClient) throw new Error("Supabase non connecté.");
+
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                closeAdminModal();
+                switchView('admin');
+                document.getElementById('admin-current-user').textContent = email;
+                await loadAdminData();
+
+            } catch (err) {
+                errEl.textContent = "Erreur de connexion : " + (err.message || "Identifiants invalides");
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Connexion";
+            }
+        }
+
+        async function checkExistingAdminSession() {
+            if (!supabaseClient) return;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    document.getElementById('admin-current-user').textContent = session.user.email;
+                }
+            } catch (e) {
+                console.log("Pas de session active");
+            }
+        }
+
+        async function logoutAdmin() {
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            switchView('participant');
+        }
+
+        function switchView(viewName) {
+            const participantContainer = document.getElementById('participant-container');
+            const adminView = document.getElementById('admin-view');
+            const stepperBar = document.getElementById('stepper-progress-container');
+
+            if (viewName === 'admin') {
+                participantContainer.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                stepperBar.classList.add('hidden');
+            } else {
+                participantContainer.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                stepperBar.classList.remove('hidden');
+            }
+        }
+
+        // Chargement des données d'administration
+        async function loadAdminData() {
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                adminResponsesData = data || [];
+                renderAdminDashboard(adminResponsesData);
+
+            } catch (err) {
+                console.error("Erreur chargement admin:", err);
+                alert("Impossible de charger les données : " + err.message);
+            }
+        }
+
+        function renderAdminDashboard(data) {
+            // 1. Calcul des KPIs
+            const total = data.length;
+            document.getElementById('kpi-total').textContent = total;
+
+            const notes = data.map(r => r.note_soiree).filter(n => typeof n === 'number' && n > 0);
+            const noteMoyenne = notes.length > 0 ? (notes.reduce((a, b) => a + b, 0) / notes.length).toFixed(1) : '-';
+            document.getElementById('kpi-note-moyenne').textContent = noteMoyenne !== '-' ? `${noteMoyenne} / 5` : '-';
+
+            const spectaclePositifs = data.filter(r => r.avis_spectacle === 'Très apprécié' || r.avis_spectacle === 'Apprécié').length;
+            const tauxSpectacle = total > 0 ? Math.round((spectaclePositifs / total) * 100) : 0;
+            document.getElementById('kpi-satisfaction-spectacle').textContent = `${tauxSpectacle}%`;
+
+            const emailsCount = data.filter(r => r.email && r.email.trim()).length;
+            document.getElementById('kpi-emails-count').textContent = emailsCount;
+
+            // 2. Rendu des graphiques Chart.js
+            renderCharts(data);
+
+            // 3. Rendu du tableau
+            renderAdminTable(data);
+        }
+
+        function renderCharts(data) {
+            // Communes Chart
+            const communeCounts = {};
+            data.forEach(r => {
+                const c = r.commune === "Autre / Hors territoire" && r.commune_autre ? `Autre (${r.commune_autre})` : (r.commune || 'Non renseigné');
+                communeCounts[c] = (communeCounts[c] || 0) + 1;
+            });
+
+            const ctxCommunes = document.getElementById('chart-communes');
+            if (ctxCommunes) {
+                if (chartCommunesInstance) chartCommunesInstance.destroy();
+                chartCommunesInstance = new Chart(ctxCommunes, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(communeCounts),
+                        datasets: [{
+                            label: 'Participants',
+                            data: Object.values(communeCounts),
+                            backgroundColor: '#38bdf8',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    }
+                });
+            }
+
+            // Notes Chart
+            const notesCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            data.forEach(r => {
+                if (r.note_soiree && notesCounts[r.note_soiree] !== undefined) {
+                    notesCounts[r.note_soiree]++;
+                }
+            });
+
+            const ctxNotes = document.getElementById('chart-notes');
+            if (ctxNotes) {
+                if (chartNotesInstance) chartNotesInstance.destroy();
+                chartNotesInstance = new Chart(ctxNotes, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['1 étoile', '2 étoiles', '3 étoiles', '4 étoiles', '5 étoiles'],
+                        datasets: [{
+                            data: [notesCounts[1], notesCounts[2], notesCounts[3], notesCounts[4], notesCounts[5]],
+                            backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderAdminTable(data) {
+            const tbody = document.getElementById('admin-table-body');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">Aucune réponse enregistrée pour le moment.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((r, idx) => {
+                const dateStr = r.created_at ? new Date(r.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+                const communeDisplay = r.commune === "Autre / Hors territoire" && r.commune_autre ? `${r.commune} (${r.commune_autre})` : (r.commune || '-');
+                
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3 text-slate-500 whitespace-nowrap">${dateStr}</td>
+                        <td class="p-3 font-bold text-slate-900">${escapeHtml(communeDisplay)}</td>
+                        <td class="p-3 text-slate-600">${escapeHtml(r.ages_enfants || '-')}</td>
+                        <td class="p-3 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                ${r.note_soiree ? `${r.note_soiree} ⭐` : '-'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-slate-700">${escapeHtml(r.avis_spectacle || '-')}</td>
+                        <td class="p-3 text-slate-700">${escapeHtml(r.echange_parentalite || '-')}</td>
+                        <td class="p-3 text-slate-600 font-mono text-[11px]">${escapeHtml(r.email || '-')}</td>
+                        <td class="p-3 text-right whitespace-nowrap space-x-1">
+                            <button onclick="viewDetail(${idx})"
+                                    class="px-2 py-1 rounded-lg bg-sky-50 text-primary hover:bg-sky-100 font-bold transition-colors">
+                                Détail
+                            </button>
+                            <button onclick="deleteResponse(${r.id})"
+                                    class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold transition-colors">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterAdminTable() {
+            const query = document.getElementById('admin-search').value.toLowerCase().trim();
+            if (!query) {
+                renderAdminTable(adminResponsesData);
+                return;
+            }
+
+            const filtered = adminResponsesData.filter(r => {
+                const combined = [
+                    r.commune,
+                    r.commune_autre,
+                    r.ages_enfants,
+                    r.email,
+                    r.apprecie_particulierement,
+                    r.themes_actions_futures,
+                    r.idee_suggestion
+                ].filter(Boolean).join(' ').toLowerCase();
+
+                return combined.includes(query);
+            });
+
+            renderAdminTable(filtered);
+        }
+
+        // Détail d'une réponse
+        function viewDetail(index) {
+            const r = adminResponsesData[index];
+            if (!r) return;
+
+            const dateStr = r.created_at ? new Date(r.created_at).toLocaleString('fr-FR') : '-';
+            document.getElementById('detail-date').textContent = `Enregistré le ${dateStr}`;
+
+            const communeDisplay = r.commune === "Autre / Hors territoire" && r.commune_autre ? `${r.commune} (${r.commune_autre})` : (r.commune || '-');
+
+            const contentEl = document.getElementById('detail-content');
+            contentEl.innerHTML = `
+                <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Commune :</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(communeDisplay)}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Âges des enfants :</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(r.ages_enfants || '-')}</span>
+                        ${r.ages_details ? `<span class="block text-[11px] text-slate-500 italic">(${escapeHtml(r.ages_details)})</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Note Soirée :</span>
+                        <span class="font-bold text-amber-600">${r.note_soiree ? `${r.note_soiree} / 5 ⭐` : '-'}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Spectacle :</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(r.avis_spectacle || '-')}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Échanges :</span>
+                        <span class="font-bold text-slate-800">${escapeHtml(r.echange_parentalite || '-')}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div class="p-3 bg-sky-50/50 rounded-xl border border-sky-100">
+                        <span class="font-bold text-slate-900 block mb-1">Qu'avez-vous particulièrement apprécié ?</span>
+                        <p class="text-slate-700 whitespace-pre-wrap">${escapeHtml(r.apprecie_particulierement || '(Aucune remarque renseignée)')}</p>
+                    </div>
+
+                    <div class="p-3 bg-sky-50/50 rounded-xl border border-sky-100">
+                        <span class="font-bold text-slate-900 block mb-1">Thèmes ou actions pour les prochaines rencontres :</span>
+                        <p class="text-slate-700 whitespace-pre-wrap">${escapeHtml(r.themes_actions_futures || '(Aucune remarque renseignée)')}</p>
+                    </div>
+
+                    <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                        <span class="font-bold text-slate-900 block mb-1">💡 Une dernière idée ou suggestion ?</span>
+                        <p class="text-slate-700 whitespace-pre-wrap">${escapeHtml(r.idee_suggestion || '(Aucune remarque renseignée)')}</p>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl">
+                        <span class="font-bold text-slate-900 block mb-1">Souhait d'être informé(e) :</span>
+                        <p class="text-slate-700">${r.souhaite_etre_informe ? `Oui • Email : <a href="mailto:${r.email}" class="text-primary underline font-bold">${escapeHtml(r.email)}</a>` : 'Non'}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('modal-detail').classList.add('hidden');
+        }
+
+        // Suppression d'une réponse de test
+        async function deleteResponse(id) {
+            if (!confirm("Voulez-vous vraiment supprimer cette réponse ? Cette action est irréversible.")) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                await loadAdminData();
+            } catch (err) {
+                alert("Erreur lors de la suppression : " + err.message);
+            }
+        }
+
+        // Export CSV Excel (avec BOM UTF-8 et séparateur point-virgule)
+        function exportToCSV() {
+            if (!adminResponsesData || adminResponsesData.length === 0) {
+                alert("Aucune donnée à exporter.");
+                return;
+            }
+
+            const separator = ";";
+            const headers = [
+                "ID",
+                "Date",
+                "Commune",
+                "Commune Autre",
+                "Ages Enfants",
+                "Précisions Ages",
+                "Note Soirée (sur 5)",
+                "Avis Spectacle",
+                "Echange Parentalité",
+                "Particulièrement Apprécié",
+                "Thèmes Actions Futures",
+                "Souhaite être informé",
+                "Email",
+                "Suggestion Finale"
+            ];
+
+            const rows = adminResponsesData.map(r => [
+                r.id,
+                r.created_at ? new Date(r.created_at).toLocaleString('fr-FR') : '',
+                r.commune || '',
+                r.commune_autre || '',
+                r.ages_enfants || '',
+                r.ages_details || '',
+                r.note_soiree || '',
+                r.avis_spectacle || '',
+                r.echange_parentalite || '',
+                r.apprecie_particulierement || '',
+                r.themes_actions_futures || '',
+                r.souhaite_etre_informe ? 'Oui' : 'Non',
+                r.email || '',
+                r.idee_suggestion || ''
+            ].map(cell => `"${String(cell || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`).join(separator));
+
+            const csvContent = headers.join(separator) + '\n' + rows.join('\n');
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+            
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Export_Questionnaire_Parentalite_CCMVR_${today}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Utilitaire échappement HTML pour éviter les injections
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+
+</html>
